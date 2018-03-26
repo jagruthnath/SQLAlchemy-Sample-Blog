@@ -12,10 +12,10 @@ class webServerHandler(BaseHTTPRequestHandler):
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 output = ""
-                output += "<html><body>"
-                output += "<h1>Micro Blog</h1>"
-                output += '''<form method='POST' enctype='multipart/form-data' action='/new_post'><table><tr><td><label>Title</label></td><td><input name="Title" type="text" required></td></tr><tr><td><label>Message</label></td><td><textarea name="Message" required> </textarea></td><tr><td><input type="submit" value="Post"></td><tr> </form>'''
-                output += "</body></html>"
+                output += "<html><head><meta charset='UTF-8'></head><body>"
+                output += "<h1>Micro Blog</h1><h2 id='error' style='color:red;display:none'>Both fields are required</h2>"
+                output += '''<form method='POST' enctype='multipart/form-data' action='/new_post'><table><tr><td><label>Title</label></td><td><input id='title' name="Title" type="text"></td></tr><tr><td><label>Message</label></td><td><textarea id='mes' name="Message"> </textarea></td><tr><td><input type="submit" value="Post"></td><tr> </form>'''
+                output += '''</body></html>'''
                 self.wfile.write(bytes(output,"utf-8"))
                 print (output)
                 return
@@ -58,14 +58,36 @@ class webServerHandler(BaseHTTPRequestHandler):
                 fields = cgi.parse_multipart(self.rfile, pdict)
                 field1 = fields.get('Title')
                 field2 = fields.get('Message')
-            p=User(str(field1[0],'utf-8'),str(field2[0],'utf-8'))    
-            p.insert()
+            print(field1+field2)
             output = ""
-            output += "<html><body>"
-            output += "<h2> Post successful...</h2>"            
-            output += "<a href='/show_entries'>Show entries</a></body></html>"
-            self.wfile.write(bytes(output,"utf-8"))
-            print (output)            
+            
+            if str(field1[0],'utf-8') == "" and str(field2[0],'utf-8') == " ":
+                print("inside")
+                output += "<html><head><meta charset='UTF-8'></head><body>"
+                output += "<h1>Micro Blog</h1><h2 id='error' style='color:red;'>Both fields are required</h2>"
+                output += '''<form method='POST' enctype='multipart/form-data' action='/new_post'><table><tr><td><label>Title</label></td><td><input id='title' name="Title" type="text"></td></tr><tr><td><label>Message</label></td><td><textarea id='mes' name="Message"> </textarea></td><tr><td><input onsubmit="return validateForm()"  type="submit" value="Post"></td><tr> </form>'''
+                output += '''<script>
+                                function validateForm()
+                                {
+                                    if( document.getElementById('mes').value == " " && document.getElementById('title').value == "")
+                                    {   
+                                        document.getElementByID('error').style.display=block;
+                                        return false;
+                                    }
+                                    else
+                                        return true;
+                                }
+                            </script></body></html>'''
+                self.wfile.write(bytes(output,"utf-8"))
+            else:
+                p=User(str(field1[0],'utf-8'),str(field2[0],'utf-8'))    
+                p.insert()
+                output = ""
+                output += "<html><body>"
+                output += "<h2> Post successful...</h2>"            
+                output += "<a href='/show_entries'>Show entries</a></body></html>"
+                self.wfile.write(bytes(output,"utf-8"))
+                print (output)            
         except:
             pass
 
